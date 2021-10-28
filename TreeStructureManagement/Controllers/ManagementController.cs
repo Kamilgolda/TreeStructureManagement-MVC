@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TreeStructureManagement.Data;
 using TreeStructureManagement.Models;
+using TreeStructureManagement.Repositories;
 
 namespace TreeStructureManagement.Controllers
 {
     public class ManagementController : Controller
     {
         private readonly TreeStructureDbContext _context;
+        private readonly INodesRepository _nodesRepository;
 
-        public ManagementController(TreeStructureDbContext context)
+        public ManagementController(TreeStructureDbContext context, INodesRepository nodesRepository)
         {
             _context = context;
+            _nodesRepository = nodesRepository;
         }
 
         // GET: Management
@@ -24,25 +27,6 @@ namespace TreeStructureManagement.Controllers
         {
             var treeStructureDbContext = _context.Nodes.Include(n => n.Parent);
             return View(await treeStructureDbContext.ToListAsync());
-        }
-
-        // GET: Management/Details/5
-        public async Task<IActionResult> Details(long? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var node = await _context.Nodes
-                .Include(n => n.Parent)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (node == null)
-            {
-                return NotFound();
-            }
-
-            return View(node);
         }
 
         // GET: Management/Create
@@ -153,6 +137,19 @@ namespace TreeStructureManagement.Controllers
         private bool NodeExists(long id)
         {
             return _context.Nodes.Any(e => e.Id == id);
+        }
+
+        public async Task<IActionResult> ClearDb()
+        {
+            await _nodesRepository.RemoveAll();
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> LoadDb()
+        {
+            await ClearDb();
+            await _nodesRepository.AddData();
+            return RedirectToAction(nameof(Index));
         }
     }
 }

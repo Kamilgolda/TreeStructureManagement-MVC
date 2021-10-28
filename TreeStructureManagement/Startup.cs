@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TreeStructureManagement.Data;
+using TreeStructureManagement.Repositories;
 
 namespace TreeStructureManagement
 {
@@ -31,6 +32,8 @@ namespace TreeStructureManagement
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddDatabaseDeveloperPageExceptionFilter();
+
+            services.AddScoped<INodesRepository, NodesRepository>();
 
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddRoles<IdentityRole>().AddEntityFrameworkStores<TreeStructureDbContext>();

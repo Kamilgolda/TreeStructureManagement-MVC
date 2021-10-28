@@ -1,14 +1,16 @@
 ﻿@model IEnumerable<TreeStructureManagement.Models.Node>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Management panel";
 }
 
-<h1>Index</h1>
+<h2>Index</h2>
 
-<p>
+<div class="row">
     <a asp-action="Create">Create New</a>
-</p>
+    <a class="btn btn-secondary" asp-action="LoadDb">Load sample data</a>
+    <a class="btn btn-danger" asp-action="ClearDb">Clear database</a>
+</div>
 <table class="table">
     <thead>
         <tr>
