@@ -1,0 +1,43 @@
+﻿@model TreeStructureManagement.Models.DeleteAndMoveDto
+
+@{
+    ViewData["Title"] = "Delete and move children";
+}
+
+<div class="row">
+    <a class="btn btn-dark" asp-action="Index">Back to List</a>
+</div>
+<hr />
+<h2>@ViewData["Title"]</h2>
+
+<h4>Will be deleted: @ViewData["Parent"]</h4>
+<h4>Requires change of parent:</h4>
+<ul>
+    @foreach (var child in ViewBag.children)
+    {
+        <li>@child.Name</li>
+    }
+</ul>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="DeleteAndMove">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="NodeId" />
+            <div class="form-group">
+                <label asp-for="TargetId" class="control-label"></label>
+                <select asp-for="TargetId" class="form-control" asp-items="ViewBag.NodesSelectList">
+                    <option value="">-- Select Parent --</option>
+                </select>
+                <span asp-validation-for="TargetId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Remove the node and move children" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

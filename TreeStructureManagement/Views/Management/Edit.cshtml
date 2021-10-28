@@ -1,0 +1,55 @@
+﻿@model TreeStructureManagement.Models.Node
+
+<div class="row">
+    <a class="btn btn-dark" asp-action="Index">Back to List</a>
+</div>
+<div class="row">
+    <div class="col" style="background-color: rgba(81, 55, 250, 0.3)">
+        <h2>Update</h2>
+        <h4>@Model.Name</h4>
+        <hr />
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ParentId" class="control-label"></label>
+                <select asp-for="ParentId" class="form-control" asp-items="ViewBag.ParentId">
+                </select>
+                <span asp-validation-for="ParentId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save changes" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+    <div class="col" style="background-color: rgba(0, 136, 140, 0.3)">
+        <h2>Delete</h2>
+        <h4>@Model.Name</h4>
+        @if (ViewBag.hasChildren)
+        {
+            <h3>This node has children. Do you want to remove node with children?</h3>
+        }
+        else
+        {
+            <h3>Are you sure you want to delete this leaf?</h3>
+        }
+        <hr />
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <input type="submit" value="Delete" class="btn btn-danger" />
+        </form>
+        @if (ViewBag.hasChildren)
+        {
+            <a class="btn btn-primary" asp-action="DeleteAndMove" asp-route-id="@Model.Id">Remove the node and move children</a>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

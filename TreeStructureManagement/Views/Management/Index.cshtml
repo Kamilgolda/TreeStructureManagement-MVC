@@ -1,0 +1,55 @@
+﻿@model List<TreeStructureManagement.Models.Node>
+
+@{
+    ViewData["Title"] = "Management panel";
+
+    async Task getTreeView(List<TreeStructureManagement.Models.Node> nodes, string sortby)
+    {
+        foreach (var node in nodes)
+        {
+            <li>
+                @{ var submenu = node.Children.Count();}
+                <a asp-action="Edit" asp-route-id="@node.Id">@node.Name</a>
+                @if (submenu > 0)
+                {
+                    <ul>
+                        @if (sortby != "name")
+                        {
+                            { await getTreeView(node.Children.ToList(), sortby); }
+                        }
+                        else
+                        {
+                            { await getTreeView(node.Children.OrderBy(nd => nd.Name).ToList(), sortby); }
+                        }
+                    </ul>
+                }
+            </li>
+        }
+    }
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="row">
+    <a class="btn btn-primary" asp-action="Create">Add new</a>
+    <a class="btn btn-secondary" asp-action="LoadDb">Load sample data</a>
+    <form asp-action="Index">
+        <input type="hidden" name="sortby" value="name" />
+        <input class="btn btn-dark" type="submit" value="Sort by name" />
+    </form>
+    <a class="btn btn-danger" asp-action="ClearDb">Clear database</a>
+</div>
+
+<div class="row" style="border: 1px solid black; padding:10px; background-color:#FAFAFA;">
+    <div class="treeview">
+        @if (Model != null && Model.Count() > 0)
+        {
+            <ul>
+                @{await getTreeView(Model, ViewBag.sortby);}
+            </ul>
+        }
+    </div>
+</div>
+
+
+
