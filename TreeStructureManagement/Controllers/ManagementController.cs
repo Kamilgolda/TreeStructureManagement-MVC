@@ -100,6 +100,9 @@ namespace TreeStructureManagement.Controllers
             var node = await _nodesRepository.GetNodeByIdAsync(id);
             if (node == null) return NotFound();
             List<Node> nodes = await _nodesRepository.GetNodes().OrderBy(nd => nd.Name).Where(nd => nd.Id != node.Id).ToListAsync();
+            List<Node> allchildren = new List<Node>();
+            await _nodesRepository.GetAllChildren(node.Id, allchildren);
+            nodes = nodes.Except(allchildren).ToList();
             ViewData["ParentId"] = new SelectList(nodes, "Id", "Name", node.ParentId);
             ViewBag.hasChildren = false;
             if (await _nodesRepository.GetNodes().AnyAsync(nd => nd.ParentId == node.Id))
