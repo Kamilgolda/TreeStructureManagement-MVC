@@ -48,13 +48,28 @@ namespace TreeStructureManagement.Controllers
             return View(list);
         }
 
+        /// <summary>
+        /// Adds a SelectList to the view and determines if the structure has a root
+        /// </summary>
+        /// <returns>Create view</returns>
         // GET: Management/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["ParentId"] = new SelectList(_context.Nodes, "Id", "Name");
+            List<Node> nodes = await _nodesRepository.GetNodes().OrderBy(node => node.Name).ToListAsync();
+            if (nodes.Count() != 0)
+            {
+                ViewData["ParentId"] = new SelectList(nodes, "Id", "Name");
+                ViewBag.HasRoot = true;
+            }
+            else ViewBag.HasRoot = false;
             return View();
         }
 
+        /// <summary>
+        /// If element is validated adds a new element to the database and returns to the Index view, if not return to Create view
+        /// </summary>
+        /// <param name="node">New element</param>
+        /// <returns>If element is validated Index view, if not Create view</returns>
         // POST: Management/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -62,11 +77,10 @@ namespace TreeStructureManagement.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(node);
-                await _context.SaveChangesAsync();
+                await _nodesRepository.AddNode(node);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ParentId"] = new SelectList(_context.Nodes, "Id", "Name", node.ParentId);
+            ViewData["ParentId"] = new SelectList(await _nodesRepository.GetNodes().OrderBy(node => node.Name).ToListAsync(), "Id", "Name", node.ParentId);
             return View(node);
         }
 

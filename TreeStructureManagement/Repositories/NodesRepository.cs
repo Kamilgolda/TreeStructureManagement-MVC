@@ -43,5 +43,15 @@ namespace TreeStructureManagement.Repositories
         {
             return _context.Nodes.AsQueryable();
         }
+
+        /// <summary>
+        /// Adds a new item to database
+        /// </summary>
+        /// <param name="node">New element</param>
+        public async Task AddNode(Node node)
+        {
+            await _context.Nodes.AddAsync(node);
+            await _context.SaveChangesAsync();
+        }
     }
 }
