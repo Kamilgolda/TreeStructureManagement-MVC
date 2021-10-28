@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +14,10 @@ namespace TreeStructureManagement.Controllers
 {
     public class ManagementController : Controller
     {
-        private readonly TreeStructureDbContext _context;
         private readonly INodesRepository _nodesRepository;
 
         public ManagementController(TreeStructureDbContext context, INodesRepository nodesRepository)
         {
-            _context = context;
             _nodesRepository = nodesRepository;
         }
 
@@ -27,6 +26,7 @@ namespace TreeStructureManagement.Controllers
         /// </summary>
         /// <returns>Index view with list all tree elements</returns>
         // GET: Management
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
             List<Node> list = _nodesRepository.GetNodes().Include(node => node.Children).AsEnumerable().Where(node => node.ParentId == null).ToList();
@@ -41,6 +41,7 @@ namespace TreeStructureManagement.Controllers
         // POST: Management/Index
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public IActionResult Index(string sortby)
         {
             List<Node> list = _nodesRepository.GetNodes().Include(node => node.Children).AsEnumerable().Where(node => node.ParentId == null).ToList();
@@ -53,6 +54,7 @@ namespace TreeStructureManagement.Controllers
         /// </summary>
         /// <returns>Create view</returns>
         // GET: Management/Create
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             List<Node> nodes = await _nodesRepository.GetNodes().OrderBy(node => node.Name).ToListAsync();
@@ -73,6 +75,7 @@ namespace TreeStructureManagement.Controllers
         // POST: Management/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,Name,ParentId")] Node node)
         {
             if (ModelState.IsValid)
@@ -90,6 +93,7 @@ namespace TreeStructureManagement.Controllers
         /// <param name="id">item ID</param>
         /// <returns>Edit view with node element</returns>
         // GET: Management/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(long? id)
         {
             if (id == null || id < 0) return NotFound();
@@ -114,6 +118,7 @@ namespace TreeStructureManagement.Controllers
         // POST: Management/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(long id, [Bind("Id,Name,ParentId")] Node node)
         {
             if (id != node.Id) return NotFound();
@@ -142,6 +147,7 @@ namespace TreeStructureManagement.Controllers
         // POST: Management/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(long id)
         {
             await _nodesRepository.RemoveWithAllChildrenAsync(id);
@@ -154,6 +160,7 @@ namespace TreeStructureManagement.Controllers
         /// <param name="id">Parent ID</param>
         /// <returns>DeleteAndMove view with DeleteAndMoveDto model</returns>
         // GET: Management/DeleteAndMove/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAndMove(long? id)
         {
             if (id == null || id < 0) return NotFound();
@@ -178,6 +185,7 @@ namespace TreeStructureManagement.Controllers
         // POST: Management/DeleteAndMove/5
         [HttpPost, ActionName("DeleteAndMove")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAndMoveConfirmed(long id, [Bind("NodeId, TargetId")] DeleteAndMoveDto dto)
         {
             if (id != dto.NodeId || id < 0) return NotFound();
@@ -200,17 +208,20 @@ namespace TreeStructureManagement.Controllers
             return View(dto);
         }
 
-        private bool NodeExists(long id)
-        {
-            return _context.Nodes.Any(e => e.Id == id);
-        }
-
+        /// <summary>
+        /// Removes the actual data from the database
+        /// </summary>
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ClearDb()
         {
             await _nodesRepository.RemoveAll();
             return RedirectToAction(nameof(Index));
         }
 
+        /// <summary>
+        /// Removes the actual data from the database and adds sample data
+        /// </summary>
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> LoadDb()
         {
             await ClearDb();
