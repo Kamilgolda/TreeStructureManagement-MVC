@@ -53,5 +53,101 @@ namespace TreeStructureManagement.Repositories
             await _context.Nodes.AddAsync(node);
             await _context.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Gets an element with the given id
+        /// </summary>
+        /// <param name="id">item ID</param>
+        /// <returns>item</returns>
+        public async Task<Node> GetNodeByIdAsync(long? id)
+        {
+            var node = await _context.Nodes.FirstOrDefaultAsync(node => node.Id == id);
+            return node;
+        }
+
+        /// <summary>
+        /// Updates the element with the given id
+        /// </summary>
+        /// <param name="node">item ID</param>
+        public async Task UpdateNodeAsync(Node node)
+        {
+            _context.Nodes.Update(node);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Checks if the element with the given identifier exists
+        /// </summary>
+        /// <param name="id">item ID</param>
+        /// <returns>true or false</returns>
+        public bool NodeExists(long id)
+        {
+            return _context.Nodes.Any(node => node.Id == id);
+        }
+
+        /// <summary>
+        /// Adds all descendants of the parent to the list
+        /// </summary>
+        /// <param name="parentId">parent ID</param>
+        /// <param name="list">list with children items</param>
+        public async Task GetAllChildren(long parentId, List<Node> list)
+        {
+            List<Node> children = await GetNodes().Where(nd => nd.ParentId == parentId).ToListAsync();
+            if (children.Count != 0)
+            {
+                list.AddRange(children);
+                foreach (var child in children)
+                {
+                    await GetAllChildren(child.Id, list);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes parent and descendants
+        /// </summary>
+        /// <param name="id">Parent ID</param>
+        public async Task RemoveWithAllChildrenAsync(long id)
+        {
+            var node = await _context.Nodes.FindAsync(id);
+            List<Node> toRemove = new List<Node>() { node };
+            await GetAllChildren(id, toRemove);
+            _context.Nodes.RemoveRange(toRemove);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <param name="ParentId">Parent ID</param>
+        /// <returns>List with children's items.</returns>
+        public async Task<List<Node>> GetChildren(long ParentId)
+        {
+            return await GetNodes().Where(nd => nd.ParentId == ParentId).ToListAsync();
+        }
+
+        /// <summary>
+        /// Transfers all of the parent's children to the new parent
+        /// </summary>
+        /// <param name="oldParentId">Parent ID</param>
+        /// <param name="newParentId">New parent ID</param>
+        public async Task ChangeParent(long oldParentId, long newParentId)
+        {
+            var children = await GetChildren(oldParentId);
+            foreach (var child in children)
+            {
+                child.ParentId = newParentId;
+            }
+            _context.Nodes.UpdateRange(children);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Removes the item
+        /// </summary>
+        /// <param name="node">Item</param>
+        public async Task RemoveNodeAsync(Node node)
+        {
+            _context.Nodes.Remove(node);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

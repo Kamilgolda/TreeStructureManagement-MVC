@@ -12,5 +12,13 @@ namespace TreeStructureManagement.Repositories
         Task RemoveAll();
         IQueryable<Node> GetNodes();
         Task AddNode(Node node);
+        Task<Node> GetNodeByIdAsync(long? id);
+        Task UpdateNodeAsync(Node node);
+        bool NodeExists(long id);
+        Task GetAllChildren(long parentId, List<Node> list);
+        Task RemoveWithAllChildrenAsync(long id);
+        Task<List<Node>> GetChildren(long ParentId);
+        Task ChangeParent(long oldParentId, long newParentId);
+        Task RemoveNodeAsync(Node node);
     }
 }

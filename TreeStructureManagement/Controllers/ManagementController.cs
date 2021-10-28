@@ -84,87 +84,120 @@ namespace TreeStructureManagement.Controllers
             return View(node);
         }
 
+        /// <summary>
+        /// Checks if the element with the given id exists, creates a SelectList for the view, checks if the element has children
+        /// </summary>
+        /// <param name="id">item ID</param>
+        /// <returns>Edit view with node element</returns>
         // GET: Management/Edit/5
         public async Task<IActionResult> Edit(long? id)
         {
-            if (id == null)
+            if (id == null || id < 0) return NotFound();
+            var node = await _nodesRepository.GetNodeByIdAsync(id);
+            if (node == null) return NotFound();
+            List<Node> nodes = await _nodesRepository.GetNodes().OrderBy(nd => nd.Name).Where(nd => nd.Id != node.Id).ToListAsync();
+            ViewData["ParentId"] = new SelectList(nodes, "Id", "Name", node.ParentId);
+            ViewBag.hasChildren = false;
+            if (await _nodesRepository.GetNodes().AnyAsync(nd => nd.ParentId == node.Id))
             {
-                return NotFound();
+                ViewBag.hasChildren = true;
             }
-
-            var node = await _context.Nodes.FindAsync(id);
-            if (node == null)
-            {
-                return NotFound();
-            }
-            ViewData["ParentId"] = new SelectList(_context.Nodes, "Id", "Name", node.ParentId);
             return View(node);
         }
 
+        /// <summary>
+        /// If the item is validated, updates it and returns to the Index view, if not, return to the Edit view
+        /// </summary>
+        /// <param name="id">item ID</param>
+        /// <param name="node">item</param>
+        /// <returns>If element is validated Index view, if not Edit view</returns>
         // POST: Management/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(long id, [Bind("Id,Name,ParentId")] Node node)
         {
-            if (id != node.Id)
-            {
-                return NotFound();
-            }
-
+            if (id != node.Id) return NotFound();
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(node);
-                    await _context.SaveChangesAsync();
+                    await _nodesRepository.UpdateNodeAsync(node);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!NodeExists(node.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!_nodesRepository.NodeExists(id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ParentId"] = new SelectList(_context.Nodes, "Id", "Name", node.ParentId);
+            ViewData["ParentId"] = new SelectList(await _nodesRepository.GetNodes().OrderBy(nd => nd.Name).Where(nd => nd.Id != node.Id).ToListAsync(), "Id", "Name", node.ParentId);
             return View(node);
         }
 
-        // GET: Management/Delete/5
-        public async Task<IActionResult> Delete(long? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var node = await _context.Nodes
-                .Include(n => n.Parent)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (node == null)
-            {
-                return NotFound();
-            }
-
-            return View(node);
-        }
-
+        /// <summary>
+        /// Removes the element with the given id and its descendants, then moves to the Index action
+        /// </summary>
+        /// <param name="id">item ID</param>
+        /// <returns>Go to the index action</returns>
         // POST: Management/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(long id)
         {
-            var node = await _context.Nodes.FindAsync(id);
-            _context.Nodes.Remove(node);
-            await _context.SaveChangesAsync();
+            await _nodesRepository.RemoveWithAllChildrenAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Checks if the element with the given id exists, creates a SelectList for the view.
+        /// </summary>
+        /// <param name="id">Parent ID</param>
+        /// <returns>DeleteAndMove view with DeleteAndMoveDto model</returns>
+        // GET: Management/DeleteAndMove/5
+        public async Task<IActionResult> DeleteAndMove(long? id)
+        {
+            if (id == null || id < 0) return NotFound();
+            var node = await _nodesRepository.GetNodeByIdAsync(id);
+            if (node == null) return NotFound();
+            ViewData["Parent"] = node.Name;
+            List<Node> children = await _nodesRepository.GetChildren(id.Value);
+            ViewBag.Children = children;
+            List<Node> nodes = await _nodesRepository.GetNodes().OrderBy(nd => nd.Name).Where(nd => nd.Id != node.Id).ToListAsync();
+            nodes = nodes.Except(children).ToList();
+            ViewBag.NodesSelectList = new SelectList(nodes, "Id", "Name");
+            DeleteAndMoveDto dto = new DeleteAndMoveDto() { NodeId = id.Value };
+            return View(dto);
+        }
+
+        /// <summary>
+        /// Deletes the parent and transfers the descendants.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="dto">Model with parent id and new parent id</param>
+        /// <returns>If element is validated Index view, if not DeleteAndMove view</returns>
+        // POST: Management/DeleteAndMove/5
+        [HttpPost, ActionName("DeleteAndMove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAndMoveConfirmed(long id, [Bind("NodeId, TargetId")] DeleteAndMoveDto dto)
+        {
+            if (id != dto.NodeId || id < 0) return NotFound();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _nodesRepository.ChangeParent(dto.NodeId, dto.TargetId);
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    if (!_nodesRepository.NodeExists(dto.TargetId)) return NotFound();
+                    else throw;
+                }
+                var node = await _nodesRepository.GetNodeByIdAsync(dto.NodeId);
+                if (node == null) return NotFound();
+                await _nodesRepository.RemoveNodeAsync(node);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(dto);
         }
 
         private bool NodeExists(long id)
