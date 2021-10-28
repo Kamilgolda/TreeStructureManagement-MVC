@@ -10,5 +10,6 @@ namespace TreeStructureManagement.Repositories
     {
         Task AddData();
         Task RemoveAll();
+        IQueryable<Node> GetNodes();
     }
 }

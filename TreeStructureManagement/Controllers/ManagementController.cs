@@ -22,11 +22,30 @@ namespace TreeStructureManagement.Controllers
             _nodesRepository = nodesRepository;
         }
 
+        /// <summary>
+        /// The main action to manage the structure
+        /// </summary>
+        /// <returns>Index view with list all tree elements</returns>
         // GET: Management
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var treeStructureDbContext = _context.Nodes.Include(n => n.Parent);
-            return View(await treeStructureDbContext.ToListAsync());
+            List<Node> list = _nodesRepository.GetNodes().Include(node => node.Children).AsEnumerable().Where(node => node.ParentId == null).ToList();
+            return View(list);
+            //return View(await _nodesRepository.GetNodes().OrderBy(node => node.Name).ToListAsync());
+        }
+
+        /// <summary>
+        /// The main action to manage the structure
+        /// </summary>
+        /// <returns>Index view with list all tree sorted by name elements</returns>
+        // POST: Management/Index
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Index(string sortby)
+        {
+            List<Node> list = _nodesRepository.GetNodes().Include(node => node.Children).AsEnumerable().Where(node => node.ParentId == null).ToList();
+            ViewBag.sortby = sortby;
+            return View(list);
         }
 
         // GET: Management/Create

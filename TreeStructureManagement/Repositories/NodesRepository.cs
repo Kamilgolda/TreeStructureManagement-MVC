@@ -37,5 +37,11 @@ namespace TreeStructureManagement.Repositories
             _context.Nodes.RemoveRange(_context.Nodes);
             await _context.SaveChangesAsync();
         }
+
+        /// <returns>Iqueryable nodes to for subsequent inquiries</returns>
+        public IQueryable<Node> GetNodes()
+        {
+            return _context.Nodes.AsQueryable();
+        }
     }
 }
