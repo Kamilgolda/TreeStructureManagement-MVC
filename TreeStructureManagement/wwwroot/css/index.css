@@ -1,9 +1,4 @@
-﻿.panelcontainer {
-    padding: 10px;
-    background-image: linear-gradient(#ebebeb, white)
-}
-
-.item {
+﻿.item {
     cursor: pointer;
 }
 

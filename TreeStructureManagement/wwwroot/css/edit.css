@@ -1,0 +1,13 @@
+﻿.editcontent {
+    display: flex;
+    flex-flow: column;
+    padding:20px;
+    border: 1px solid black;
+    justify-content: center;
+    align-items:center;
+    opacity: 0.5;
+    width:500px;
+}
+.editcontent:hover{
+    opacity: 1;
+}

@@ -18,7 +18,7 @@ namespace TreeStructureManagement.Models
 
         [Required]
         [StringLength(50)]
-        [RegularExpression(@"^[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ\0-9\s.]*$", ErrorMessage = "Characters are not allowed. (letter, number, whitespace)")]
+        [RegularExpression(@"^[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ0-9.\s]*$", ErrorMessage = "Characters are not allowed. (letter, number, whitespace)")]
         [Display(Name = "Name")]
         public string Name { get; set; }
 
