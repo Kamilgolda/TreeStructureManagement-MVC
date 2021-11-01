@@ -35,21 +35,6 @@ namespace TreeStructureManagement.Controllers
         }
 
         /// <summary>
-        /// The main action to manage the structure
-        /// </summary>
-        /// <returns>Index view with list all tree sorted by name elements</returns>
-        // POST: Management/Index
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public IActionResult Index(string sortby)
-        {
-            List<Node> list = _nodesRepository.GetNodes().Include(node => node.Children).AsEnumerable().Where(node => node.ParentId == null).ToList();
-            ViewBag.sortby = sortby;
-            return View(list);
-        }
-
-        /// <summary>
         /// Adds a SelectList to the view and determines if the structure has a root
         /// </summary>
         /// <returns>Create view</returns>

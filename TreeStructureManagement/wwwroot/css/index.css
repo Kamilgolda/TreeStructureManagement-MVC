@@ -1,0 +1,23 @@
+﻿.panelcontainer {
+    padding: 10px;
+    background-image: linear-gradient(#ebebeb, white)
+}
+
+.item {
+    cursor: pointer;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+#tree ul {
+    padding-left: 3em;
+    line-height: 1em;
+    list-style-type: square;
+}
+
+.item a:hover {
+    transition: 1s;
+    background-color: #707070;
+}

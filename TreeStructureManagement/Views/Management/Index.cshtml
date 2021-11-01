@@ -2,54 +2,66 @@
 
 @{
     ViewData["Title"] = "Management panel";
-
-    async Task getTreeView(List<TreeStructureManagement.Models.Node> nodes, string sortby)
-    {
-        foreach (var node in nodes)
-        {
-            <li>
-                @{ var submenu = node.Children.Count();}
-                <a asp-action="Edit" asp-route-id="@node.Id">@node.Name</a>
-                @if (submenu > 0)
-                {
-                    <ul>
-                        @if (sortby != "name")
-                        {
-                            { await getTreeView(node.Children.ToList(), sortby); }
-                        }
-                        else
-                        {
-                            { await getTreeView(node.Children.OrderBy(nd => nd.Name).ToList(), sortby); }
-                        }
-                    </ul>
-                }
-            </li>
-        }
-    }
 }
+<h3>@ViewData["Title"]</h3>
 
-<h2>@ViewData["Title"]</h2>
-
-<div class="row">
-    <a class="btn btn-primary" asp-action="Create">Add new</a>
-    <a class="btn btn-secondary" asp-action="LoadDb">Load sample data</a>
-    <form asp-action="Index">
-        <input type="hidden" name="sortby" value="name" />
-        <input class="btn btn-dark" type="submit" value="Sort by name" />
-    </form>
-    <a class="btn btn-danger" asp-action="ClearDb">Clear database</a>
-</div>
-
-<div class="row" style="border: 1px solid black; padding:10px; background-color:#FAFAFA;">
-    <div class="treeview">
-        @if (Model != null && Model.Count() > 0)
-        {
+<div class="row panelcontainer">
+    <div id="tree" class="col">
+        <div class="d-flex">
+                <a class="btn btn-success mr-auto" asp-action="Create">Add new</a>
+                <a class="btn btn-secondary ml-1" asp-action="LoadDb">Load sample data</a>
+                <a class="btn btn-danger ml-1" asp-action="ClearDb">Clear database</a>     
+        </div>
+        <hr />
+        <div class="d-flex m-2">
             <ul>
-                @{await getTreeView(Model, ViewBag.sortby);}
+                <tree-item class="item" :item="treeData" :expand="expand" :sortbyname="sortbyname"></tree-item>
             </ul>
-        }
+            <div class="d-flex flex-column ml-auto">
+                <button v-on:click="expandtoggle">{{expandtext}}</button>
+                <button class="mt-1" v-on:click="sortbynametoggle">sort by name</button>
+            </div>
+        </div>
     </div>
 </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="~/js/vue/tree-item.js"></script>
+    <script>
 
+    var app = new Vue({
+        el: "#tree",
+        data: {
+            treeData: [],
+            expand: sessionStorage.getItem('expand') === 'true',
+            sortbyname: sessionStorage.getItem('sortbyname') === 'true',
+            expandtext: "",
+        },
+        created: function () {
+            let serializedTree = '@Html.Raw(Json.Serialize(Model))';
+            this.treeData = JSON.parse(serializedTree);
+            this.treeData = this.treeData.$values[0];
+
+            if (this.expand) this.expandtext = "collapse all"
+            else this.expandtext = "expand all"
+        },
+        methods: {
+            expandtoggle() {
+                this.expand = !this.expand;
+                if (this.expand) this.expandtext = "collapse all"
+                else this.expandtext = "expand all"
+                sessionStorage.setItem('expand', this.expand);
+            },
+            sortbynametoggle() {
+                this.sortbyname = !this.sortbyname;
+                sessionStorage.setItem('sortbyname', this.sortbyname);
+            },
+        }
+    });
+    </script>
+}
+@section Styles{ 
+    <link rel="stylesheet" href="~/css/index.css" />
+}
 

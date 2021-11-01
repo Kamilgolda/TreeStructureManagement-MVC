@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using TreeStructureManagement.Data;
 using TreeStructureManagement.Repositories;
@@ -37,7 +38,8 @@ namespace TreeStructureManagement
 
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddRoles<IdentityRole>().AddEntityFrameworkStores<TreeStructureDbContext>();
-            services.AddControllersWithViews();
+            services.AddControllersWithViews().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
         }
         /// <summary>
         /// Creates administrator account,admin role and assign a role.
